@@ -2,39 +2,49 @@ import React, { useState, useEffect, useRef } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import PropTypes from 'prop-types'
-// import useKeyPress from '../hooks/useKeyPress'
+import useKeyPress from '../hooks/useKeyPress'
+// import { logRoles } from '@testing-library/react'
 // import useIpcRenderer from '../hooks/useIpcRenderer'
 
 const FileSearch = ({ title, onFileSearch }) => {
   const [inputActive, setInputActive] = useState(false)
+  console.log('inputActive', inputActive)
+
   const [value, setValue] = useState('')
-  // const enterPressed = useKeyPress(13)
-  // const escPressed = useKeyPress(27)
+  const enterPressed = useKeyPress(13)
+  const escPressed = useKeyPress(27)
   let node = useRef(null)
+
   const startSearch = () => {
+    console.log(value)
     setInputActive(true)
   }
   const closeSearch = () => {
     setInputActive(false)
     setValue('')
-    // onFileSearch(false)
+    onFileSearch(false)
   }
   // useIpcRenderer({
   //   'search-file': startSearch
   // })
+
   useEffect(() => {
-    // if (enterPressed && inputActive) {
-    //   onFileSearch(value)
-    // }
-    // if (escPressed && inputActive) {
-    //   closeSearch()
-    // }
+
+    if (enterPressed && inputActive) {
+      onFileSearch(value)
+    }
+    if (escPressed && inputActive) {
+      closeSearch()
+    }
   })
+
+  // 激活input高亮状态
   useEffect(() => {
     if (inputActive) {
       node.current.focus()
     }
   }, [inputActive])
+
   return (
     <div className="alert alert-primary d-flex justify-content-between align-items-center mb-0">
       {!inputActive && (
