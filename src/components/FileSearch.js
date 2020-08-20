@@ -29,7 +29,6 @@ const FileSearch = ({ title, onFileSearch }) => {
   // })
 
   useEffect(() => {
-
     if (enterPressed && inputActive) {
       onFileSearch(value)
     }
