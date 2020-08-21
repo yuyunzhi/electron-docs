@@ -41,16 +41,16 @@ const settingsStore = new Store({ name: 'Settings' })
 // }
 function App() {
   // const [files, setFiles] = useState(fileStore.get('files') || {})
-  const [files, setFiles] = useState(defaultFiles || [])
+  const [files, setFiles] = useState(defaultFiles || {})
   const [activeFileID, setActiveFileID] = useState('')
   const [openedFileIDs, setOpenedFileIDs] = useState([])
   const [searchedFiles, setSearchedFiles] = useState([])
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
 
   const openedFiles = openedFileIDs.map((openID) => {
-    return  files[files.findIndex((file)=>file.id === openID)]
+    return  files[openID]
   })
-  const activeFile = files[files.findIndex((file)=>file.id === activeFileID)]
+  const activeFile = files[activeFileID]
 
   const [isLoading, setLoading] = useState(false)
 
@@ -137,7 +137,7 @@ function App() {
       createdAt: new Date().getTime(),
       isNew: true
     }
-    setFiles({ ...files, [newID]: newFile })
+    setFiles({ ...files,[newID]:newFile })
   }
 
   const importFiles = () => {
@@ -217,7 +217,7 @@ function App() {
         <div className="col-3 bg-light left-panel">
           <FileSearch title="My Document" onFileSearch={fileSearch} />
           <FileList
-            files={defaultFiles}
+            rawFiles={defaultFiles}
             onFileClick={fileClick}
             onFileDelete={deleteFile}
             onSaveEdit={updateFileName}

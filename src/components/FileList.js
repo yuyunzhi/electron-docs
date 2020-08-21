@@ -7,14 +7,21 @@ import useKeyPress from '../hooks/useKeyPress'
 import useContextMenu from '../hooks/useContextMenu'
 import { getParentNode } from '../utils/helper'
 
-const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
+const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
+  const [files] = useState(()=>{ 
+    let files = []
+    for(let key in rawFiles){
+      files.push(rawFiles[key])
+    }
+    return files
+  })
   const [editStatus, setEditStatus] = useState(false)
   const [value, setValue] = useState('')
   let node = useRef(null)
 
   const enterPressed = useKeyPress(13)
   const escPressed = useKeyPress(27)
-  
+
   const closeSearch = (editItem) => {
     setEditStatus(false)
     setValue('')
