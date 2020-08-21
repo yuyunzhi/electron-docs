@@ -1,58 +1,82 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import FileSearch from './components/FileSearch'
-// import { flattenArr, objToArr, timestampToString } from './utils/helper'
+import FileList from './components/FileList'
+import { flattenArr, objToArr, timestampToString } from './utils/helper'
+import defaultFiles from './utils/defaultFiles'
 
 const Store = window.require('electron-store')
-// const fileStore = new Store({'name': 'Files Data'})
+const fileStore = new Store({'name': 'Files Data'})
 
 function App() {
-  // const [ files, setFiles ] = useState(fileStore.get('files') || {})
-  // const [ searchedFiles, setSearchedFiles ] = useState([])
-  // const filesArr = objToArr(files)
-  // const fileListArr = (searchedFiles.length > 0) ? searchedFiles : filesArr
+  const [ files, setFiles ] = useState(fileStore.get('files') || {})
+  const [searchedFiles, setSearchedFiles] = useState([])
+  const filesArr = objToArr(files)
+  const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
+
+  const fileClick = (fileID) => {
+    // set current active file
+    // setActiveFileID(fileID)
+    // const currentFile = files[fileID]
+    // const { id, title, path, isLoaded } = currentFile
+    // if (!isLoaded) {
+    //   if (getAutoSync()) {
+    //     ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
+    //   } else {
+    //     fileHelper.readFile(currentFile.path).then(value => {
+    //       const newFile = { ...files[fileID], body: value, isLoaded: true }
+    //       setFiles({ ...files, [fileID]: newFile })
+    //     })
+    //   }
+    // }
+    // // if openedFiles don't have the current ID
+    // // then add new fileID to openedFiles
+    // if (!openedFileIDs.includes(fileID)) {
+    //   setOpenedFileIDs([ ...openedFileIDs, fileID ])
+    // }
+  }
 
   const fileSearch = (keyword) => {
     // filter out the new files based on the keyword
     // const newFiles = filesArr.filter(file => file.title.includes(keyword))
     // setSearchedFiles(newFiles)
   }
-  // const deleteFile = (id) => {
-  // if (files[id].isNew) {
-  //   const { [id]: value, ...afterDelete } = files
-  //   setFiles(afterDelete)
-  // } else {
-  //   fileHelper.deleteFile(files[id].path).then(() => {
-  //     const { [id]: value, ...afterDelete } = files
-  //     setFiles(afterDelete)
-  //     saveFilesToStore(afterDelete)
-  //     // close the tab if opened
-  //     tabClose(id)
-  //   })
-  // }
-  // }
-  // const updateFileName = (id, title, isNew) => {
-  // newPath should be different based on isNew
-  // if isNew is false, path should be old dirname + new title
-  // const newPath = isNew ? join(savedLocation, `${title}.md`)
-  // : join(dirname(files[id].path), `${title}.md`)
-  // const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
-  // const newFiles = { ...files, [id]: modifiedFile }
-  // if (isNew) {
-  //   fileHelper.writeFile(newPath, files[id].body).then(() => {
-  //     setFiles(newFiles)
-  //     saveFilesToStore(newFiles)
-  //   })
-  // } else {
-  //   const oldPath = files[id].path
-  //   fileHelper.renameFile(oldPath, newPath).then(() => {
-  //     setFiles(newFiles)
-  //     saveFilesToStore(newFiles)
-  //   })
-  // }
+  const deleteFile = (id) => {
+    // if (files[id].isNew) {
+    //   const { [id]: value, ...afterDelete } = files
+    //   setFiles(afterDelete)
+    // } else {
+    //   fileHelper.deleteFile(files[id].path).then(() => {
+    //     const { [id]: value, ...afterDelete } = files
+    //     setFiles(afterDelete)
+    //     saveFilesToStore(afterDelete)
+    //     // close the tab if opened
+    //     tabClose(id)
+    //   })
+    // }
+  }
 
-  // }
+  const updateFileName = (id, title, isNew) => {
+    // newPath should be different based on isNew
+    // if isNew is false, path should be old dirname + new title
+    // const newPath = isNew ? join(savedLocation, `${title}.md`)
+    // : join(dirname(files[id].path), `${title}.md`)
+    // const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
+    // const newFiles = { ...files, [id]: modifiedFile }
+    // if (isNew) {
+    //   fileHelper.writeFile(newPath, files[id].body).then(() => {
+    //     setFiles(newFiles)
+    //     saveFilesToStore(newFiles)
+    //   })
+    // } else {
+    //   const oldPath = files[id].path
+    //   fileHelper.renameFile(oldPath, newPath).then(() => {
+    //     setFiles(newFiles)
+    //     saveFilesToStore(newFiles)
+    //   })
+    // }
+  }
 
   return (
     <div className="App container-fluid px-0">
@@ -62,12 +86,12 @@ function App() {
       <div className="row no-gutters">
         <div className="col-3 bg-light left-panel">
           <FileSearch title="My Document" onFileSearch={fileSearch} />
-          {/* <FileList 
-          files={fileListArr}
-          onFileClick={fileClick}
-          onFileDelete={deleteFile}
-          onSaveEdit={updateFileName}
-        /> */}
+          <FileList
+            files={defaultFiles}
+            onFileClick={fileClick}
+            onFileDelete={deleteFile}
+            onSaveEdit={updateFileName}
+          />
           <div className="row no-gutters button-group">
             <div className="col">
               {/* <BottomBtn 
