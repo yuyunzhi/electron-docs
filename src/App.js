@@ -40,27 +40,31 @@ const settingsStore = new Store({ name: 'Settings' })
 //   fileStore.set('files', filesStoreObj)
 // }
 function App() {
-
-  const [files, setFiles] = useState(fileStore.get('files') || {})
+  // const [files, setFiles] = useState(fileStore.get('files') || {})
+  const [files, setFiles] = useState(defaultFiles || [])
   const [activeFileID, setActiveFileID] = useState('')
   const [openedFileIDs, setOpenedFileIDs] = useState([])
   const [searchedFiles, setSearchedFiles] = useState([])
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
+
+  const openedFiles = openedFileIDs.map((openID) => {
+    return  files[files.findIndex((file)=>file.id === openID)]
+  })
+  const activeFile = files[files.findIndex((file)=>file.id === activeFileID)]
+
   const [isLoading, setLoading] = useState(false)
 
   const filesArr = objToArr(files)
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
-  const activeFile = files[activeFileID]
-  const openedFiles = openedFileIDs.map((openID) => {
-    return files[openID]
-  })
 
   const fileClick = (fileID) => {
+   console.log('fileClick',fileID);
     // set current active file
     setActiveFileID(fileID)
-    const currentFile = files[fileID]
-    const { id, title, path, isLoaded } = currentFile
-    if (!isLoaded) {
+
+    // const currentFile = files[fileID]
+    // const { id, title, path, isLoaded } = currentFile
+    // if (!isLoaded) {
       // if (getAutoSync()) {
       //   ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
       // } else {
@@ -69,7 +73,7 @@ function App() {
       //     setFiles({ ...files, [fileID]: newFile })
       //   })
       // }
-    }
+    // }
     // if openedFiles don't have the current ID
     // then add new fileID to openedFiles
     if (!openedFileIDs.includes(fileID)) {
@@ -238,36 +242,35 @@ function App() {
           </div>
         </div>
         <div className="col-9 right-panel">
-          {/* {!activeFile && (
+          {!activeFile && (
             <div className="start-page">选择或者创建新的 Markdown 文档</div>
-          )} */}
-          {/* {activeFile && ( */}
-          <>
-            <TabList
-              files={defaultFiles}
-              activeId={activeFileID}
-              unsaveIds={unsavedFileIDs}
-              onTabClick={tabClick}
-              onCloseTab={tabClose}
-            />
-            <SimpleMDE
-              key={activeFile && activeFile.id}
-              value={activeFile && activeFile.body}
-              onChange={(value) => {
-                console.log('value',value);
-                fileChange(activeFile.id, value)
-              }}
-              options={{
-                minHeight: '515px'
-              }}
-            />
-            {/* {activeFile.isSynced && (
-              <span className="sync-status">
-                已同步，上次同步{timestampToString(activeFile.updatedAt)}
-              </span>
-            )} */}
-          </>
-          {/* )} */}
+          )}
+          {activeFile && (
+            <>
+              <TabList
+                files={openedFiles}
+                activeId={activeFileID}
+                unsaveIds={unsavedFileIDs}
+                onTabClick={tabClick}
+                onCloseTab={tabClose}
+              />
+              <SimpleMDE
+                key={activeFile && activeFile.id}
+                value={activeFile && activeFile.body}
+                onChange={(value) => {
+                  fileChange(activeFile.id, value)
+                }}
+                options={{
+                  minHeight: '515px'
+                }}
+              />
+              {activeFile.isSynced && (
+                <span className="sync-status">
+                  已同步，上次同步{timestampToString(activeFile.updatedAt)}
+                </span>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
