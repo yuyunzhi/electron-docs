@@ -22,23 +22,26 @@ import Loader from './components/Loader'
 const Store = window.require('electron-store')
 const fileStore = new Store({ name: 'Files Data' })
 const settingsStore = new Store({ name: 'Settings' })
-// const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(key => !!settingsStore.get(key))
-// const saveFilesToStore = (files) => {
-//   // we don't have to store any info in file system, eg: isNew, body ,etc
-//   const filesStoreObj = objToArr(files).reduce((result, file) => {
-//     const { id, path, title, createdAt, isSynced, updatedAt } = file
-//     result[id] = {
-//       id,
-//       path,
-//       title,
-//       createdAt,
-//       isSynced,
-//       updatedAt
-//     }
-//     return result
-//   }, {})
-//   fileStore.set('files', filesStoreObj)
-// }
+const getAutoSync = () =>
+  ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(
+    (key) => !!settingsStore.get(key)
+  )
+const saveFilesToStore = (files) => {
+  // we don't have to store any info in file system, eg: isNew, body ,etc
+  const filesStoreObj = objToArr(files).reduce((result, file) => {
+    const { id, path, title, createdAt, isSynced, updatedAt } = file
+    result[id] = {
+      id,
+      path,
+      title,
+      createdAt,
+      isSynced,
+      updatedAt
+    }
+    return result
+  }, {})
+  fileStore.set('files', filesStoreObj)
+}
 function App() {
   // const [files, setFiles] = useState(fileStore.get('files') || {})
   const [files, setFiles] = useState(defaultFiles || {})
@@ -48,8 +51,12 @@ function App() {
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
 
   const openedFiles = openedFileIDs.map((openID) => {
-    return  files[openID]
+    return files[openID]
+  }).filter(file=>{
+    return file
   })
+  console.log('openedFiles', openedFiles);
+  
   const activeFile = files[activeFileID]
 
   const [isLoading, setLoading] = useState(false)
@@ -59,21 +66,21 @@ function App() {
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
 
   const fileClick = (fileID) => {
-   console.log('fileClick',fileID);
+    console.log('fileClick', fileID)
     // set current active file
     setActiveFileID(fileID)
 
     // const currentFile = files[fileID]
     // const { id, title, path, isLoaded } = currentFile
     // if (!isLoaded) {
-      // if (getAutoSync()) {
-      //   ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
-      // } else {
-      //   fileHelper.readFile(currentFile.path).then((value) => {
-      //     const newFile = { ...files[fileID], body: value, isLoaded: true }
-      //     setFiles({ ...files, [fileID]: newFile })
-      //   })
-      // }
+    // if (getAutoSync()) {
+    //   ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
+    // } else {
+    //   fileHelper.readFile(currentFile.path).then((value) => {
+    //     const newFile = { ...files[fileID], body: value, isLoaded: true }
+    //     setFiles({ ...files, [fileID]: newFile })
+    //   })
+    // }
     // }
     // if openedFiles don't have the current ID
     // then add new fileID to openedFiles
@@ -84,18 +91,24 @@ function App() {
 
   const fileSearch = (keyword) => {
     // filter out the new files based on the keyword
-    console.log('[fileSearch]keyword', keyword)
-
     const newFiles = filesArr.filter((file) => file.title.includes(keyword))
-    console.log('newFiles', newFiles)
-
     setSearchedFiles(newFiles)
   }
   const deleteFile = (id) => {
+    console.log('deleteFile', id, files, files[id])
+
     if (files[id].isNew) {
       const { [id]: value, ...afterDelete } = files
       setFiles(afterDelete)
+    console.log('afterDelete', afterDelete)
+
     } else {
+      const { [id]: value, ...afterDelete } = files
+      console.log('afterDelete', afterDelete)
+      setFiles(afterDelete)
+      // saveFilesToStore(afterDelete)
+      // close the tab if opened
+      tabClose(id)
       // fileHelper.deleteFile(files[id].path).then(() => {
       //   const { [id]: value, ...afterDelete } = files
       //   setFiles(afterDelete)
@@ -138,7 +151,7 @@ function App() {
       createdAt: new Date().getTime(),
       isNew: true
     }
-    setFiles({ ...files,[newID]:newFile })
+    setFiles({ ...files, [newID]: newFile })
   }
 
   const importFiles = () => {

@@ -8,7 +8,6 @@ import useContextMenu from '../hooks/useContextMenu'
 import { getParentNode, objToArr } from '../utils/helper'
 
 const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
-  
   const files = objToArr(rawFiles)
   const [editStatus, setEditStatus] = useState(false)
   const [value, setValue] = useState('')
@@ -76,11 +75,12 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
     }
   })
 
+  // 初始化判断是否存在新建的
   useEffect(() => {
     const newFile = files.find((file) => file.isNew)
     if (newFile) {
       setEditStatus(newFile.id)
-      setValue(newFile.title)
+      // setValue(newFile.title)
     }
   }, [files])
 
@@ -89,6 +89,8 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
       node.current.focus()
     }
   }, [editStatus])
+
+  console.log('[filelist] files', files)
 
   return (
     <ul className="list-group list-group-flush file-list">
