@@ -55,6 +55,7 @@ function App() {
   const [isLoading, setLoading] = useState(false)
 
   const filesArr = objToArr(files)
+
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
 
   const fileClick = (fileID) => {
@@ -217,7 +218,7 @@ function App() {
         <div className="col-3 bg-light left-panel">
           <FileSearch title="My Document" onFileSearch={fileSearch} />
           <FileList
-            rawFiles={defaultFiles}
+            rawFiles={fileListArr}
             onFileClick={fileClick}
             onFileDelete={deleteFile}
             onSaveEdit={updateFileName}

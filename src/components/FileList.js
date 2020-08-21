@@ -5,16 +5,11 @@ import { faMarkdown } from '@fortawesome/free-brands-svg-icons'
 import PropTypes from 'prop-types'
 import useKeyPress from '../hooks/useKeyPress'
 import useContextMenu from '../hooks/useContextMenu'
-import { getParentNode } from '../utils/helper'
+import { getParentNode, objToArr } from '../utils/helper'
 
 const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
-  const [files] = useState(()=>{ 
-    let files = []
-    for(let key in rawFiles){
-      files.push(rawFiles[key])
-    }
-    return files
-  })
+  
+  const files = objToArr(rawFiles)
   const [editStatus, setEditStatus] = useState(false)
   const [value, setValue] = useState('')
   let node = useRef(null)
