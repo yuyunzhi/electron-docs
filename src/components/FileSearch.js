@@ -8,17 +8,15 @@ import useKeyPress from '../hooks/useKeyPress'
 
 const FileSearch = ({ title, onFileSearch }) => {
   const [inputActive, setInputActive] = useState(false)
-  console.log('inputActive', inputActive)
-
   const [value, setValue] = useState('')
   const enterPressed = useKeyPress(13)
   const escPressed = useKeyPress(27)
   let node = useRef(null)
 
   const startSearch = () => {
-    console.log(value)
     setInputActive(true)
   }
+
   const closeSearch = () => {
     setInputActive(false)
     setValue('')
@@ -28,10 +26,15 @@ const FileSearch = ({ title, onFileSearch }) => {
   //   'search-file': startSearch
   // })
 
+  // 持续监听按键事件
   useEffect(() => {
+    // enter 回车按钮
     if (enterPressed && inputActive) {
+      console.log('value', value)
       onFileSearch(value)
     }
+
+    // esc退出按钮
     if (escPressed && inputActive) {
       closeSearch()
     }
@@ -58,6 +61,7 @@ const FileSearch = ({ title, onFileSearch }) => {
         <>
           <input
             className="form-control"
+            style={{height:'26px'}}
             value={value}
             ref={node}
             onChange={(e) => {
@@ -65,7 +69,7 @@ const FileSearch = ({ title, onFileSearch }) => {
             }}
           />
           <button type="button" className="icon-button" onClick={closeSearch}>
-            <FontAwesomeIcon title="关闭" size="lg" icon={faTimes} />
+            <FontAwesomeIcon title="关闭" size="sm" icon={faTimes} />
           </button>
         </>
       )}

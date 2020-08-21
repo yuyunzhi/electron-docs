@@ -8,13 +8,13 @@ import useContextMenu from '../hooks/useContextMenu'
 import { getParentNode } from '../utils/helper'
 
 const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
-  console.log('files', files)
-
   const [editStatus, setEditStatus] = useState(false)
   const [value, setValue] = useState('')
   let node = useRef(null)
+
   const enterPressed = useKeyPress(13)
   const escPressed = useKeyPress(27)
+  
   const closeSearch = (editItem) => {
     setEditStatus(false)
     setValue('')
@@ -23,6 +23,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
       onFileDelete(editItem.id)
     }
   }
+
   const clickedItem = useContextMenu(
     [
       {
@@ -62,6 +63,8 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
   useEffect(() => {
     const editItem = files.find((file) => file.id === editStatus)
     if (enterPressed && editStatus && value.trim() !== '') {
+      console.log('input value', value)
+
       onSaveEdit(editItem.id, value, editItem.isNew)
       setEditStatus(false)
       setValue('')
@@ -70,6 +73,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
       closeSearch(editItem)
     }
   })
+
   useEffect(() => {
     const newFile = files.find((file) => file.isNew)
     if (newFile) {
@@ -83,7 +87,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
       node.current.focus()
     }
   }, [editStatus])
-  
+
   return (
     <ul className="list-group list-group-flush file-list">
       {files.map((file) => (
