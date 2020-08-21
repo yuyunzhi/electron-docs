@@ -1,22 +1,58 @@
 import React, { useState } from 'react'
+import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
+// import SimpleMDE from "react-simplemde-editor"
+import uuidv4 from 'uuid/v4'
+import { flattenArr, objToArr, timestampToString } from './utils/helper'
+// import fileHelper from './utils/fileHelper'
+import defaultFiles from './utils/defaultFiles'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'easymde/dist/easymde.min.css'
+
 import FileSearch from './components/FileSearch'
 import FileList from './components/FileList'
-import uuidv4 from 'uuid/v4'
-import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
-import { flattenArr, objToArr, timestampToString } from './utils/helper'
-import defaultFiles from './utils/defaultFiles'
 import BottomBtn from './components/BottomBtn'
+import TabList from './components/TabList'
+import Loader from './components/Loader'
+// import useIpcRenderer from './hooks/useIpcRenderer'
 
+// require node.js modules
+// const { join, basename, extname, dirname } = window.require('path')
+// const { remote, ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ name: 'Files Data' })
-
+const settingsStore = new Store({ name: 'Settings' })
+// const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(key => !!settingsStore.get(key))
+// const saveFilesToStore = (files) => {
+//   // we don't have to store any info in file system, eg: isNew, body ,etc
+//   const filesStoreObj = objToArr(files).reduce((result, file) => {
+//     const { id, path, title, createdAt, isSynced, updatedAt } = file
+//     result[id] = {
+//       id,
+//       path,
+//       title,
+//       createdAt,
+//       isSynced,
+//       updatedAt
+//     }
+//     return result
+//   }, {})
+//   fileStore.set('files', filesStoreObj)
+// }
 function App() {
   const [files, setFiles] = useState(fileStore.get('files') || {})
+  const [activeFileID, setActiveFileID] = useState('')
+  const [openedFileIDs, setOpenedFileIDs] = useState([])
   const [searchedFiles, setSearchedFiles] = useState([])
+  const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
+  const [isLoading, setLoading] = useState(false)
+
   const filesArr = objToArr(files)
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
+  const activeFile = files[activeFileID]
+  const openedFiles = openedFileIDs.map((openID) => {
+    return files[openID]
+  })
 
   const fileClick = (fileID) => {
     // set current active file
@@ -42,8 +78,12 @@ function App() {
 
   const fileSearch = (keyword) => {
     // filter out the new files based on the keyword
-    // const newFiles = filesArr.filter(file => file.title.includes(keyword))
-    // setSearchedFiles(newFiles)
+    console.log('[fileSearch]keyword', keyword)
+
+    const newFiles = filesArr.filter((file) => file.title.includes(keyword))
+    console.log('newFiles', newFiles);
+    
+    setSearchedFiles(newFiles)
   }
   const deleteFile = (id) => {
     // if (files[id].isNew) {
@@ -137,11 +177,27 @@ function App() {
     // })
   }
 
+  const tabClick = (fileID) => {
+    // set current active file
+    setActiveFileID(fileID)
+  }
+
+  const tabClose = (id) => {
+    //remove current id from openedFileIDs
+    const tabsWithout = openedFileIDs.filter((fileID) => fileID !== id)
+    setOpenedFileIDs(tabsWithout)
+    // set the active to the first opened tab if still tabs left
+    if (tabsWithout.length > 0) {
+      setActiveFileID(tabsWithout[0])
+    } else {
+      setActiveFileID('')
+    }
+  }
+  console.log('openedFiles', openedFiles)
+
   return (
     <div className="App container-fluid px-0">
-      {/* { isLoading && 
-      <Loader />
-    } */}
+      {isLoading && <Loader />}
       <div className="row no-gutters">
         <div className="col-3 bg-light left-panel">
           <FileSearch title="My Document" onFileSearch={fileSearch} />
@@ -171,21 +227,19 @@ function App() {
           </div>
         </div>
         <div className="col-9 right-panel">
-          {/* { !activeFile && 
-          <div className="start-page">
-            选择或者创建新的 Markdown 文档
-          </div>
-        }
-        { activeFile &&
-          <>
-            <TabList
-              files={openedFiles}
-              activeId={activeFileID}
-              unsaveIds={unsavedFileIDs}
-              onTabClick={tabClick}
-              onCloseTab={tabClose}
-            />
-            <SimpleMDE
+          {!activeFile && (
+            <div className="start-page">选择或者创建新的 Markdown 文档</div>
+          )}
+          {activeFile && (
+            <>
+              <TabList
+                files={defaultFiles}
+                activeId={activeFileID}
+                unsaveIds={unsavedFileIDs}
+                onTabClick={tabClick}
+                onCloseTab={tabClose}
+              />
+              {/* <SimpleMDE
               key={activeFile && activeFile.id} 
               value={activeFile && activeFile.body}
               onChange={(value) => {fileChange(activeFile.id, value)}}
@@ -195,9 +249,9 @@ function App() {
             />
             { activeFile.isSynced && 
               <span className="sync-status">已同步，上次同步{timestampToString(activeFile.updatedAt)}</span>
-            }
-          </>
-        } */}
+            } */}
+            </>
+          )}
         </div>
       </div>
     </div>
