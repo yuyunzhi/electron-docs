@@ -51,17 +51,20 @@ function App() {
   const [searchedFiles, setSearchedFiles] = useState([])
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
 
-  const savedLocation = settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
-  console.log('savedLocation', savedLocation);
-  
-  const openedFiles = openedFileIDs.map((openID) => {
-    return files[openID]
-  }).filter(file=>{
-    return file
-  })
+  const savedLocation =
+    settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
+  console.log('savedLocation', savedLocation)
 
-  console.log('openedFiles', openedFiles);
-  
+  const openedFiles = openedFileIDs
+    .map((openID) => {
+      return files[openID]
+    })
+    .filter((file) => {
+      return file
+    })
+
+  console.log('openedFiles', openedFiles)
+
   const activeFile = files[activeFileID]
 
   const [isLoading, setLoading] = useState(false)
@@ -71,22 +74,23 @@ function App() {
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
 
   const fileClick = (fileID) => {
-    console.log('fileClick', fileID)
     // set current active file
     setActiveFileID(fileID)
 
-    // const currentFile = files[fileID]
-    // const { id, title, path, isLoaded } = currentFile
-    // if (!isLoaded) {
-    // if (getAutoSync()) {
-    //   ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
-    // } else {
-    //   fileHelper.readFile(currentFile.path).then((value) => {
-    //     const newFile = { ...files[fileID], body: value, isLoaded: true }
-    //     setFiles({ ...files, [fileID]: newFile })
-    //   })
-    // }
-    // }
+    const currentFile = files[fileID]
+
+    console.log('currentFile', currentFile)
+    const { id, title, path, isLoaded } = currentFile
+    if (!isLoaded) {
+      if (getAutoSync()) {
+        ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
+      } else {
+        fileHelper.readFile(currentFile.path).then((value) => {
+          const newFile = { ...files[fileID], body: value, isLoaded: true }
+          setFiles({ ...files, [fileID]: newFile })
+        })
+      }
+    }
     // if openedFiles don't have the current ID
     // then add new fileID to openedFiles
     if (!openedFileIDs.includes(fileID)) {
@@ -109,10 +113,7 @@ function App() {
     } else {
       const { [id]: value, ...afterDelete } = files
       console.log('afterDelete', afterDelete)
-      // setFiles(afterDelete)
       saveFilesToStore(afterDelete)
-      // close the tab if opened
-      // tabClose(id)
       fileHelper.deleteFile(files[id].path).then(() => {
         const { [id]: value, ...afterDelete } = files
         setFiles(afterDelete)
@@ -126,8 +127,9 @@ function App() {
   const updateFileName = (id, title, isNew) => {
     // newPath should be different based on isNew
     // if isNew is false, path should be old dirname + new title
-    const newPath = isNew ? join(savedLocation, `${title}.md`)
-    : join(dirname(files[id].path), `${title}.md`)
+    const newPath = isNew
+      ? join(savedLocation, `${title}.md`)
+      : join(dirname(files[id].path), `${title}.md`)
 
     const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
     const newFiles = { ...files, [id]: modifiedFile }
