@@ -4,7 +4,6 @@ import SimpleMDE from 'react-simplemde-editor'
 import uuidv4 from 'uuid/v4'
 import { flattenArr, objToArr, timestampToString } from './utils/helper'
 import fileHelper from './utils/fileHelper'
-import defaultFiles from './utils/defaultFiles'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'easymde/dist/easymde.min.css'
@@ -14,13 +13,15 @@ import FileList from './components/FileList'
 import BottomBtn from './components/BottomBtn'
 import TabList from './components/TabList'
 import Loader from './components/Loader'
-// import useIpcRenderer from './hooks/useIpcRenderer'
+import useIpcRenderer from './hooks/useIpcRenderer'
 
 // require node.js modules
 const { join, basename, extname, dirname } = window.require('path')
 const { remote, ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ name: 'Files Data' })
+console.log('fileStore', fileStore)
+
 const settingsStore = new Store({ name: 'Settings' })
 const getAutoSync = () =>
   ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(
@@ -53,7 +54,6 @@ function App() {
 
   const savedLocation =
     settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
-  console.log('savedLocation', savedLocation)
 
   const openedFiles = openedFileIDs
     .map((openID) => {
@@ -66,11 +66,8 @@ function App() {
   console.log('openedFiles', openedFiles)
 
   const activeFile = files[activeFileID]
-
   const [isLoading, setLoading] = useState(false)
-
   const filesArr = objToArr(files)
-
   const fileListArr = searchedFiles.length > 0 ? searchedFiles : filesArr
 
   const fileClick = (fileID) => {
@@ -78,9 +75,8 @@ function App() {
     setActiveFileID(fileID)
 
     const currentFile = files[fileID]
-
-    console.log('currentFile', currentFile)
     const { id, title, path, isLoaded } = currentFile
+
     if (!isLoaded) {
       if (getAutoSync()) {
         ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
@@ -103,16 +99,13 @@ function App() {
     const newFiles = filesArr.filter((file) => file.title.includes(keyword))
     setSearchedFiles(newFiles)
   }
-  const deleteFile = (id) => {
-    console.log('deleteFile', id, files, files[id])
 
+  const deleteFile = (id) => {
     if (files[id].isNew) {
       const { [id]: value, ...afterDelete } = files
       setFiles(afterDelete)
-      console.log('afterDelete', afterDelete)
     } else {
       const { [id]: value, ...afterDelete } = files
-      console.log('afterDelete', afterDelete)
       saveFilesToStore(afterDelete)
       fileHelper.deleteFile(files[id].path).then(() => {
         const { [id]: value, ...afterDelete } = files
@@ -161,45 +154,49 @@ function App() {
   }
 
   const importFiles = () => {
-    // remote.dialog.showOpenDialog({
-    //   title: '选择导入的 Markdown 文件',
-    //   properties: ['openFile', 'multiSelections'],
-    //   filters: [
-    //     {name: 'Markdown files', extensions: ['md']}
-    //   ]
-    // }, (paths) => {
-    //   if (Array.isArray(paths)) {
-    //     // filter out the path we already have in electron store
-    //     // ["/Users/liusha/Desktop/name1.md", "/Users/liusha/Desktop/name2.md"]
-    //     const filteredPaths = paths.filter(path => {
-    //       const alreadyAdded = Object.values(files).find(file => {
-    //         return file.path === path
-    //       })
-    //       return !alreadyAdded
-    //     })
-    //     // extend the path array to an array contains files info
-    //     // [{id: '1', path: '', title: ''}, {}]
-    //     const importFilesArr = filteredPaths.map(path => {
-    //       return {
-    //         id: uuidv4(),
-    //         title: basename(path, extname(path)),
-    //         path,
-    //       }
-    //     })
-    //     // get the new files object in flattenArr
-    //     const newFiles = { ...files, ...flattenArr(importFilesArr)}
-    //     // setState and update electron store
-    //     setFiles(newFiles)
-    //     saveFilesToStore(newFiles)
-    //     if (importFilesArr.length > 0) {
-    //       remote.dialog.showMessageBox({
-    //         type: 'info',
-    //         title: `成功导入了${importFilesArr.length}个文件`,
-    //         message: `成功导入了${importFilesArr.length}个文件`,
-    //       })
-    //     }
-    //   }
-    // })
+    remote.dialog.showOpenDialog(
+      {
+        title: '选择导入的 Markdown 文件',
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'Markdown files', extensions: ['md'] }]
+      },
+      (paths) => {
+        console.log('paths', paths)
+
+        if (Array.isArray(paths)) {
+          // filter out the path we already have in electron store
+          // ["/Users/liusha/Desktop/name1.md", "/Users/liusha/Desktop/name2.md"]
+          const filteredPaths = paths.filter((path) => {
+            const alreadyAdded = Object.values(files).find((file) => {
+              return file.path === path
+            })
+            return !alreadyAdded
+          })
+          // extend the path array to an array contains files info
+          // [{id: '1', path: '', title: ''}, {}]
+          const importFilesArr = filteredPaths.map((path) => {
+            return {
+              id: uuidv4(),
+              title: basename(path, extname(path)),
+              path
+            }
+          })
+          // get the new files object in flattenArr
+          const newFiles = { ...files, ...flattenArr(importFilesArr) }
+          // setState and update electron store
+          setFiles(newFiles)
+          saveFilesToStore(newFiles)
+
+          if (importFilesArr.length > 0) {
+            remote.dialog.showMessageBox({
+              type: 'info',
+              title: `成功导入了${importFilesArr.length}个文件`,
+              message: `成功导入了${importFilesArr.length}个文件`
+            })
+          }
+        }
+      }
+    )
   }
 
   const tabClick = (fileID) => {
