@@ -63,6 +63,10 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
 
   useEffect(() => {
     const editItem = files.find((file) => file.id === editStatus)
+    console.log('editItem', editItem)
+    console.log('enterPressed', enterPressed)
+    console.log('editStatus', editStatus)
+
     if (enterPressed && editStatus && value.trim() !== '') {
       console.log('input value', value)
 
@@ -89,8 +93,6 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
       node.current.focus()
     }
   }, [editStatus])
-
-  console.log('[filelist] files', files)
 
   return (
     <ul className="list-group list-group-flush file-list">
@@ -124,6 +126,7 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
                 value={value}
                 placeholder="请输入文件名称"
                 onChange={(e) => {
+                  console.log('触发了onchange')
                   setValue(e.target.value)
                 }}
               />

@@ -17,8 +17,8 @@ import Loader from './components/Loader'
 // import useIpcRenderer from './hooks/useIpcRenderer'
 
 // require node.js modules
-// const { join, basename, extname, dirname } = window.require('path')
-// const { remote, ipcRenderer } = window.require('electron')
+const { join, basename, extname, dirname } = window.require('path')
+const { remote, ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ name: 'Files Data' })
 const settingsStore = new Store({ name: 'Settings' })
@@ -43,18 +43,21 @@ const saveFilesToStore = (files) => {
   fileStore.set('files', filesStoreObj)
 }
 function App() {
-  // const [files, setFiles] = useState(fileStore.get('files') || {})
-  const [files, setFiles] = useState(defaultFiles || {})
+  const [files, setFiles] = useState(fileStore.get('files') || {})
+  // const [files, setFiles] = useState(defaultFiles || {})
   const [activeFileID, setActiveFileID] = useState('')
   const [openedFileIDs, setOpenedFileIDs] = useState([])
   const [searchedFiles, setSearchedFiles] = useState([])
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
+
+  const savedLocation = settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
 
   const openedFiles = openedFileIDs.map((openID) => {
     return files[openID]
   }).filter(file=>{
     return file
   })
+
   console.log('openedFiles', openedFiles);
   
   const activeFile = files[activeFileID]
@@ -122,28 +125,26 @@ function App() {
   const updateFileName = (id, title, isNew) => {
     // newPath should be different based on isNew
     // if isNew is false, path should be old dirname + new title
-    // const newPath = isNew ? join(savedLocation, `${title}.md`)
-    // : join(dirname(files[id].path), `${title}.md`)
-    // const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
-    // const newFiles = { ...files, [id]: modifiedFile }
-    // if (isNew) {
-    //   fileHelper.writeFile(newPath, files[id].body).then(() => {
-    //     setFiles(newFiles)
-    //     saveFilesToStore(newFiles)
-    //   })
-    // } else {
-    //   const oldPath = files[id].path
-    //   fileHelper.renameFile(oldPath, newPath).then(() => {
-    //     setFiles(newFiles)
-    //     saveFilesToStore(newFiles)
-    //   })
-    // }
+    const newPath = isNew ? join(savedLocation, `${title}.md`)
+    : join(dirname(files[id].path), `${title}.md`)
+    const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
+    const newFiles = { ...files, [id]: modifiedFile }
+    if (isNew) {
+      fileHelper.writeFile(newPath, files[id].body).then(() => {
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
+      })
+    } else {
+      const oldPath = files[id].path
+      fileHelper.renameFile(oldPath, newPath).then(() => {
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
+      })
+    }
   }
 
   const createNewFile = () => {
     const newID = uuidv4()
-    console.log('newID', newID)
-
     const newFile = {
       id: newID,
       title: '',
