@@ -63,13 +63,8 @@ const FileList = ({ rawFiles, onFileClick, onSaveEdit, onFileDelete }) => {
 
   useEffect(() => {
     const editItem = files.find((file) => file.id === editStatus)
-    console.log('editItem', editItem)
-    console.log('enterPressed', enterPressed)
-    console.log('editStatus', editStatus)
-
+    
     if (enterPressed && editStatus && value.trim() !== '') {
-      console.log('input value', value)
-
       onSaveEdit(editItem.id, value, editItem.isNew)
       setEditStatus(false)
       setValue('')
