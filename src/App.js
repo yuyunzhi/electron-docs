@@ -156,7 +156,6 @@ function App() {
         filters: [{ name: 'Markdown files', extensions: ['md'] }]
       })
       .then(({ filePaths: paths }) => {
-        console.log('paths', paths)
         if (Array.isArray(paths)) {
           // filter out the path we already have in electron store
           // ["/Users/liusha/Desktop/name1.md", "/Users/liusha/Desktop/name2.md"]
@@ -190,12 +189,6 @@ function App() {
               title: `成功导入了${importFilesArr.length}个文件`,
               message: `成功导入了${importFilesArr.length}个文件`
             })
-          } else {
-            remote.dialog.showMessageBox({
-              type: 'info',
-              title: `导入失败`,
-              message: `重复了${paths.length}个文件`
-            })
           }
         }
       })
@@ -228,6 +221,76 @@ function App() {
       }
     }
   }
+
+  const saveCurrentFile = () => {
+    const { path, body, title } = activeFile
+    fileHelper.writeFile(path, body).then(() => {
+      setUnsavedFileIDs(unsavedFileIDs.filter((id) => id !== activeFile.id))
+      if (getAutoSync()) {
+        ipcRenderer.send('upload-file', { key: `${title}.md`, path })
+      }
+    })
+  }
+
+  const activeFileUploaded = () => {
+    const { id } = activeFile
+    const modifiedFile = {
+      ...files[id],
+      isSynced: true,
+      updatedAt: new Date().getTime()
+    }
+    const newFiles = { ...files, [id]: modifiedFile }
+    setFiles(newFiles)
+    saveFilesToStore(newFiles)
+  }
+
+  const activeFileDownloaded = (event, message) => {
+    const currentFile = files[message.id]
+    const { id, path } = currentFile
+    fileHelper.readFile(path).then((value) => {
+      let newFile
+      if (message.status === 'download-success') {
+        newFile = {
+          ...files[id],
+          body: value,
+          isLoaded: true,
+          isSynced: true,
+          updatedAt: new Date().getTime()
+        }
+      } else {
+        newFile = { ...files[id], body: value, isLoaded: true }
+      }
+      const newFiles = { ...files, [id]: newFile }
+      setFiles(newFiles)
+      saveFilesToStore(newFiles)
+    })
+  }
+
+  const filesUploaded = () => {
+    const newFiles = objToArr(files).reduce((result, file) => {
+      const currentTime = new Date().getTime()
+      result[file.id] = {
+        ...files[file.id],
+        isSynced: true,
+        updatedAt: currentTime
+      }
+      return result
+    }, {})
+    setFiles(newFiles)
+    saveFilesToStore(newFiles)
+  }
+
+  useIpcRenderer({
+    'create-new-file': createNewFile,
+    'import-file': importFiles,
+    'save-edit-file': saveCurrentFile,
+    'active-file-uploaded': activeFileUploaded,
+    'file-downloaded': activeFileDownloaded,
+    'files-uploaded': filesUploaded,
+    'loading-status': (message, status) => {
+      setLoading(status)
+    }
+  })
 
   return (
     <div className="App container-fluid px-0">
