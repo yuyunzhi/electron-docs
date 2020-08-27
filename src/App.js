@@ -166,9 +166,11 @@ function App() {
             })
             return !alreadyAdded
           })
+
           // extend the path array to an array contains files info
           // [{id: '1', path: '', title: ''}, {}]
           const importFilesArr = filteredPaths.map((path) => {
+            // 这里还需要读取内容，暂时未做
             return {
               id: uuidv4(),
               title: basename(path, extname(path)),
@@ -180,7 +182,8 @@ function App() {
           // setState and update electron store
           setFiles(newFiles)
           saveFilesToStore(newFiles)
-          
+          console.log('importFilesArr', importFilesArr)
+
           if (importFilesArr.length > 0) {
             remote.dialog.showMessageBox({
               type: 'info',
