@@ -20,8 +20,6 @@ const { join, basename, extname, dirname } = window.require('path')
 const { remote, ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ name: 'Files Data' })
-console.log('fileStore', fileStore)
-
 const settingsStore = new Store({ name: 'Settings' })
 const getAutoSync = () =>
   ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(
@@ -87,8 +85,7 @@ function App() {
         })
       }
     }
-    // if openedFiles don't have the current ID
-    // then add new fileID to openedFiles
+
     if (!openedFileIDs.includes(fileID)) {
       setOpenedFileIDs([...openedFileIDs, fileID])
     }
@@ -105,8 +102,6 @@ function App() {
       const { [id]: value, ...afterDelete } = files
       setFiles(afterDelete)
     } else {
-      const { [id]: value, ...afterDelete } = files
-      saveFilesToStore(afterDelete)
       fileHelper.deleteFile(files[id].path).then(() => {
         const { [id]: value, ...afterDelete } = files
         setFiles(afterDelete)
@@ -154,15 +149,14 @@ function App() {
   }
 
   const importFiles = () => {
-    remote.dialog.showOpenDialog(
-      {
+    remote.dialog
+      .showOpenDialog({
         title: '选择导入的 Markdown 文件',
         properties: ['openFile', 'multiSelections'],
         filters: [{ name: 'Markdown files', extensions: ['md'] }]
-      },
-      (paths) => {
+      })
+      .then(({ filePaths: paths }) => {
         console.log('paths', paths)
-
         if (Array.isArray(paths)) {
           // filter out the path we already have in electron store
           // ["/Users/liusha/Desktop/name1.md", "/Users/liusha/Desktop/name2.md"]
@@ -186,17 +180,22 @@ function App() {
           // setState and update electron store
           setFiles(newFiles)
           saveFilesToStore(newFiles)
-
+          
           if (importFilesArr.length > 0) {
             remote.dialog.showMessageBox({
               type: 'info',
               title: `成功导入了${importFilesArr.length}个文件`,
               message: `成功导入了${importFilesArr.length}个文件`
             })
+          } else {
+            remote.dialog.showMessageBox({
+              type: 'info',
+              title: `导入失败`,
+              message: `重复了${paths.length}个文件`
+            })
           }
         }
-      }
-    )
+      })
   }
 
   const tabClick = (fileID) => {
